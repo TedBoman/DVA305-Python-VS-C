@@ -88,12 +88,24 @@ def main():
         python_runs = []
         for _ in range(num_runs):
             python_runs.append(test["python_func"](n))
-        python_times.append(sum(python_runs) / len(python_runs))
+        python_time_avg = sum(python_runs) / len(python_runs)  # Calculate average HERE
+        python_times.append(python_time_avg)
 
         c_runs = []
         for _ in range(num_runs):
-           c_runs.append(test_c(n, test["c_file"], 1)) #run the c test only once and append to the list, since it averages internally
-        c_times.append(sum(c_runs) / len(c_runs))
+            c_runs.append(test_c(n, test["c_file"], 1))  # Run C test once per loop
+        c_time_avg = sum(c_runs) / len(c_runs)  # Calculate average HERE
+        c_times.append(c_time_avg)
+
+        # Print results for this test
+        print(f"--- {test['name'].upper()} TEST ---")
+        print(f"Python time (average of {num_runs}): {python_time_avg:.4f} seconds")
+        print(f"C time (average of {num_runs}): {c_time_avg:.4f} seconds")
+        if c_time_avg!= 0:  # Avoid division by zero
+            print(f"C is {python_time_avg / c_time_avg:.2f}x faster than Python")
+        else:
+            print("C time is zero")
+        print("-" * 20)
 
     # Create the bar chart (this part is now correct)
     width = 0.35  # Width of the bars
