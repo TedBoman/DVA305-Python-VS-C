@@ -9,42 +9,42 @@ def compile_c_code(filename, output_name):
         compiler = "gcc"  # Or "cl" if you're using Visual Studio's compiler
         output_name += ".exe" #add .exe extension to the output file
     try:
-        subprocess.run([compiler, filename, "-o", output_name], check=True) #check=True raises an exception if the compilation fails
+        subprocess.run([compiler, filename, "-o", output_name, "-O0"], check=True) #check=True raises an exception if the compilation fails
         return True
     except subprocess.CalledProcessError as e:
         print(f"Compilation failed: {e}")
         return False
 
 def test_count_python(n):
-    start_time = time.time()
+    start_time = time.perf_counter()
     for i in range(n):
         pass
-    end_time = time.time()
+    end_time = time.perf_counter()
     return end_time - start_time
 
 def test_arithmetic_python(n):
-    start_time = time.time()
+    start_time = time.perf_counter()
     result = 0
     for i in range(n):
         result += i * 2 + i / 3 - i % 5
-    end_time = time.time()
+    end_time = time.perf_counter()
     return end_time - start_time
 
 def test_array_python(n):
-    start_time = time.time()
+    start_time = time.perf_counter()
     my_list = list(range(n))
     for i in range(n):
         my_list[i] *= 2
-    end_time = time.time()
+    end_time = time.perf_counter()
     return end_time - start_time
 
 def test_function_python(n):
     def my_function(x):
         return x * 2
-    start_time = time.time()
+    start_time = time.perf_counter()
     for i in range(n):
         my_function(i)
-    end_time = time.time()
+    end_time = time.perf_counter()
     return end_time - start_time
 
 def test_c(n, filename, num_runs=5):  # Added num_runs parameter
@@ -54,7 +54,6 @@ def test_c(n, filename, num_runs=5):  # Added num_runs parameter
 
     times = []
     for _ in range(num_runs):
-        start_time = time.time() #time the whole execution
         try:
             subprocess.run(["./" + output_name], capture_output=True, check=True, text=True)
             output = subprocess.run(["./" + output_name], capture_output=True, check=True, text=True)
@@ -63,7 +62,6 @@ def test_c(n, filename, num_runs=5):  # Added num_runs parameter
         except subprocess.CalledProcessError as e:
             print(f"C execution failed: {e}")
             return None
-        end_time = time.time()
 
     return sum(times) / len(times)  # Return the average time
 
