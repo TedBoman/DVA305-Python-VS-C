@@ -7,7 +7,6 @@ def compile_c_code(filename, output_name):
     compiler = "gcc"  # Default compiler
     if platform.system() == "Windows":
         compiler = "gcc"  # Or "cl" if you're using Visual Studio's compiler
-        output_name += ".exe" #add .exe extension to the output file
     try:
         subprocess.run([compiler, filename, "-o", output_name, "-O0"], check=True) #check=True raises an exception if the compilation fails
         return True
@@ -47,27 +46,53 @@ def test_function_python(n):
     end_time = time.perf_counter()
     return end_time - start_time
 
-def test_c(n, filename, num_runs=5):  # Added num_runs parameter
+def test_c(n, filename, num_runs=5):
     output_name = filename[:-2] if filename.endswith(".c") else filename
+    if platform.system() == "Windows":
+      output_name += ".exe"
     if not compile_c_code(filename, output_name):
         return None
 
     times = []
     for _ in range(num_runs):
         try:
-            subprocess.run(["./" + output_name], capture_output=True, check=True, text=True)
-            output = subprocess.run(["./" + output_name], capture_output=True, check=True, text=True)
-            c_time = float(output.stdout)
-            times.append(c_time)
+            # Run the C program and capture output
+            if platform.system() == "Windows":
+                result = subprocess.run([output_name], capture_output=True, text=True, check=True)
+            else:
+                result = subprocess.run(["./" + output_name], capture_output=True, text=True, check=True)
+
+            # Split the output into lines
+            output_lines = result.stdout.strip().split('\n')
+
+            # Find the last line that can be converted to a float (the time)
+            c_time = None
+            for line in reversed(output_lines):
+                try:
+                    c_time = float(line)
+                    break  # Exit loop once a valid float is found
+                except ValueError:
+                    continue  # Ignore lines that are not floats
+
+            if c_time is not None:
+                times.append(c_time)
+            else:
+                print(f"C program did not return a valid float. Output: {result.stdout}")
+                return None  # No valid time found
+
+
         except subprocess.CalledProcessError as e:
             print(f"C execution failed: {e}")
             return None
 
-    return sum(times) / len(times)  # Return the average time
+    if not times:
+        return None
+
+    return sum(times) / len(times)
 
 def main():
     n = 100000000  # Number of iterations
-    num_runs = 1  # Number of times to run each test
+    num_runs = 1  # Number of times to run each test.  Increased for more stable results.
 
     tests = [
         {"name": "count", "python_func": test_count_python, "c_file": "test_count.c"},
@@ -86,27 +111,31 @@ def main():
         python_runs = []
         for _ in range(num_runs):
             python_runs.append(test["python_func"](n))
-        python_time_avg = sum(python_runs) / len(python_runs)  # Calculate average HERE
+        python_time_avg = sum(python_runs) / len(python_runs)
         python_times.append(python_time_avg)
 
-        c_runs = []
-        for _ in range(num_runs):
-            c_runs.append(test_c(n, test["c_file"], 1))  # Run C test once per loop
-        c_time_avg = sum(c_runs) / len(c_runs)  # Calculate average HERE
-        c_times.append(c_time_avg)
+        c_time_avg = test_c(n, test["c_file"], num_runs)  # Use num_runs here
+
+        if c_time_avg is not None:
+            c_times.append(c_time_avg)
+        else:
+            c_times.append(0)  # Append 0 if C test failed
 
         # Print results for this test
         print(f"--- {test['name'].upper()} TEST ---")
         print(f"Python time (average of {num_runs}): {python_time_avg:.4f} seconds")
-        print(f"C time (average of {num_runs}): {c_time_avg:.4f} seconds")
-        if c_time_avg!= 0:  # Avoid division by zero
-            print(f"C is {python_time_avg / c_time_avg:.2f}x faster than Python")
+        if c_time_avg is not None:
+            print(f"C time (average of {num_runs}): {c_time_avg:.4f} seconds")
+            if c_time_avg != 0:
+                print(f"C is {python_time_avg / c_time_avg:.2f}x faster than Python")
+            else:
+                print("C time is zero")
         else:
-            print("C time is zero")
+            print("C test failed.")
         print("-" * 20)
 
-    # Create the bar chart (this part is now correct)
-    width = 0.35  # Width of the bars
+    # Create the bar chart
+    width = 0.35
     x = list(range(len(test_names)))
 
     fig, ax = plt.subplots()
