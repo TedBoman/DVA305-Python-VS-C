@@ -10,7 +10,7 @@ def compile_c_code(filename, output_name):
     if platform.system() == "Windows":
         compiler = "gcc"
     try:
-        subprocess.run([compiler, filename, "-o", output_name, "-O3", "-std=c17"], check=True)
+        subprocess.run([compiler, filename, "-o", output_name, "-O3"], check=True)
         return True
     except subprocess.CalledProcessError as e:
         print(f"Compilation failed: {e}")
@@ -27,10 +27,11 @@ def test_count_python(n):
     return end_time - start_time
 
 def test_arithmetic_python(n):
+    random_values = [random.randint(0, 9) for _ in range(n)]
     start_time = time.perf_counter()
     result = 0
     for i in range(n):
-        result += i * 2 + i / 3 - i % 5
+        result += i * 2 + i / 3 - i % 5 + random_values[i]
     end_time = time.perf_counter()
     print(f"Python arithmetic result (prevent optimization): {result}")
     return end_time - start_time
@@ -209,7 +210,7 @@ def main():
     random.seed(42)
     
     # Test parameters
-    iterations_list = [10]
+    iterations_list = [1]
     size_range = range(18, 28)  # 2^18 to 2^27
     
     # Run all tests

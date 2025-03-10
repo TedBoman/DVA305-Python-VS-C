@@ -17,7 +17,9 @@ int main(int argc, char *argv[]) {
     start = clock();
 
     for (long long i = 0; i < n; i++) {
-        result = i * 2 + (double)i / 3 - i % 5; // Incorporate randomness
+        // Introduce randomness in the loop to prevent optimization
+        double random_values = rand() % 10; // Random factor between 0 and 9
+        result = i * 2 + (double)i / 3 - i % 5 + random_values; // Incorporate randomness
     }
 
     end = clock();
