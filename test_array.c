@@ -1,10 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdlib.h>
 
-int main() {
-    long long n = 100000000;
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <n>\n", argv[0]);
+        return 1;
+    }
+
+    // Convert command line argument to long long
+    long long n = atoll(argv[1]);
+    
     int *my_array = (int *)malloc(n * sizeof(int));
+    if (my_array == NULL) {
+        printf("Memory allocation failed\n");
+        return 1;
+    }
 
     clock_t start, end;
     start = clock();
